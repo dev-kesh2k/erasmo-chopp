@@ -9,6 +9,7 @@ import Cart from './pages/client/Cart';
 import Checkout from './pages/client/Checkout';
 import Orders from './pages/client/Orders';
 import OrderDetail from './pages/client/OrderDetail';
+import Ticket from './pages/client/Ticket';
 import About from './pages/client/About';
 import Dashboard from './pages/admin/Dashboard';
 import AdminOrders from './pages/admin/Orders';
@@ -44,6 +45,7 @@ export default function App() {
           <Route path="/carrinho" element={<Cart />} />
           <Route path="/pedidos" element={<Orders />} />
           <Route path="/pedidos/:id" element={<OrderDetail />} />
+          <Route path="/pedidos/:id/ticket" element={<Ticket />} />
           <Route path="/sobre" element={<About />} />
         </Route>
         <Route path="/finalizar" element={<Checkout />} />

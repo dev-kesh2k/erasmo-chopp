@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
-import { CheckCircle2, MessageCircle } from 'lucide-react';
+import { Link, useParams } from 'react-router-dom';
+import { MessageCircle, Ticket } from 'lucide-react';
 import { api, useApi, type Order } from '../../api';
 import { phoneDigits, useSavedPhone } from '../../client';
 import { useConfig } from '../../config';
@@ -25,7 +25,6 @@ function Timeline({ status }: { status: Order['status'] }) {
 
 export default function OrderDetail() {
   const { id } = useParams();
-  const [params] = useSearchParams();
   const config = useConfig();
   const [phone, setPhone] = useSavedPhone();
   const path = phone ? `/orders/${id}?phone=${phoneDigits(phone)}` : null;
@@ -61,16 +60,6 @@ export default function OrderDetail() {
   return (
     <div>
       <PageHead title={`Pedido #${o.number}`} back="/pedidos" action={<StatusPill status={o.status} />} />
-
-      {params.get('novo') && (
-        <div className="card mb-5 flex items-start gap-3 border-ok/40 bg-okbg p-4">
-          <CheckCircle2 className="mt-0.5 shrink-0 text-ok" />
-          <div className="min-w-0">
-            <p className="font-bold text-ok">Pedido enviado!</p>
-            <p className="text-sm text-soft">A loja vai confirmar em breve. Você pode acompanhar por aqui.</p>
-          </div>
-        </div>
-      )}
 
       <div className="flex flex-col gap-4">
         <div className="card p-5">
@@ -110,6 +99,9 @@ export default function OrderDetail() {
           {o.notes && <p className="text-sm text-muted">Obs.: {o.notes}</p>}
         </div>
 
+        <Link to={`/pedidos/${o.id}/ticket`} className="btn-secondary">
+          <Ticket size={20} /> Ver ticket
+        </Link>
         {store && (
           <a className="btn-secondary" href={waLink(store, orderText(o, config?.storeName || ''))} target="_blank" rel="noreferrer">
             <MessageCircle size={20} /> Falar com a loja no WhatsApp

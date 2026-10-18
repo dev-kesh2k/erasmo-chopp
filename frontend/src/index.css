@@ -74,3 +74,19 @@ body::-webkit-scrollbar {
     display: none;
   }
 }
+
+/* Impressão do ticket do pedido: só o cupom vai para o papel. */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #ticket,
+  #ticket * {
+    visibility: visible;
+  }
+  #ticket {
+    position: absolute;
+    inset: 0 0 auto 0;
+    box-shadow: none;
+  }
+}
