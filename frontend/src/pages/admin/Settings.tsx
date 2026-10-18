@@ -96,7 +96,7 @@ function Store() {
         <Field label="Telefone">
           <input className="input" inputMode="tel" value={s.phone} onChange={set('phone')} maxLength={30} />
         </Field>
-        <Field label="WhatsApp da loja" hint="Recebe o resumo dos pedidos">
+        <Field label="WhatsApp da loja" hint="Recebe o resumo dos pedidos e as mensagens do botão Suporte">
           <input className="input" inputMode="tel" value={s.whatsapp} onChange={set('whatsapp')} maxLength={30} />
         </Field>
       </div>
