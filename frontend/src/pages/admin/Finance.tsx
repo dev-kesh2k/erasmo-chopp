@@ -8,7 +8,6 @@ import { brl, dayNum, METHOD, MONTHS } from '../../util';
 interface Finance {
   month: string;
   totalCents: number;
-  feesCents: number;
   unpaidCents: number;
   orders: number;
   cancelled: number;
@@ -56,7 +55,7 @@ export default function FinancePage() {
               { label: 'Faturamento', value: brl(data.totalCents) },
               { label: 'Pedidos entregues', value: String(data.orders) },
               { label: 'Ticket médio', value: brl(data.averageCents) },
-              { label: 'Taxas de entrega', value: brl(data.feesCents) },
+              { label: 'Cancelados', value: String(data.cancelled) },
             ].map((t) => (
               <div key={t.label} className="card p-4">
                 <p className="text-sm text-muted">{t.label}</p>

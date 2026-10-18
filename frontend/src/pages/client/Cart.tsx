@@ -77,7 +77,7 @@ export default function Cart() {
               <span className="text-soft">Subtotal</span>
               <span className="font-bold">{brl(subtotal)}</span>
             </div>
-            <p className="text-sm text-muted">A taxa de entrega é calculada pelo bairro na próxima etapa.</p>
+            <p className="text-sm text-muted">Entrega grátis. Na próxima etapa você escolhe o dia e o horário.</p>
             {min > subtotal && <p className="rounded-xl bg-warnbg px-4 py-3 text-sm text-warn">Pedido mínimo de {brl(min)}. Faltam {brl(min - subtotal)}.</p>}
             {config && !config.acceptingOrders && <p className="rounded-xl bg-warnbg px-4 py-3 text-sm text-warn">A loja não está recebendo pedidos agora.</p>}
             <Link

@@ -41,18 +41,6 @@ CREATE TABLE "Product" (
 );
 
 -- CreateTable
-CREATE TABLE "DeliveryZone" (
-    "id" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "feeCents" INTEGER NOT NULL DEFAULT 0,
-    "active" BOOLEAN NOT NULL DEFAULT true,
-    "sortOrder" INTEGER NOT NULL DEFAULT 0,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "DeliveryZone_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "Order" (
     "id" TEXT NOT NULL,
     "number" SERIAL NOT NULL,
@@ -62,14 +50,14 @@ CREATE TABLE "Order" (
     "street" TEXT NOT NULL,
     "houseNumber" TEXT NOT NULL,
     "complement" TEXT NOT NULL DEFAULT '',
-    "district" TEXT NOT NULL DEFAULT '',
+    "district" TEXT NOT NULL,
     "reference" TEXT NOT NULL DEFAULT '',
-    "zoneId" TEXT,
-    "zoneName" TEXT NOT NULL DEFAULT '',
+    "latitude" DOUBLE PRECISION,
+    "longitude" DOUBLE PRECISION,
+    "voltage" INTEGER NOT NULL,
     "deliveryDate" TEXT NOT NULL,
     "deliveryWindow" TEXT NOT NULL,
     "subtotalCents" INTEGER NOT NULL,
-    "feeCents" INTEGER NOT NULL,
     "totalCents" INTEGER NOT NULL,
     "paymentMethod" TEXT NOT NULL,
     "changeForCents" INTEGER NOT NULL DEFAULT 0,
@@ -128,9 +116,6 @@ CREATE INDEX "OrderItem_orderId_idx" ON "OrderItem"("orderId");
 
 -- AddForeignKey
 ALTER TABLE "Product" ADD CONSTRAINT "Product_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "Category"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Order" ADD CONSTRAINT "Order_zoneId_fkey" FOREIGN KEY ("zoneId") REFERENCES "DeliveryZone"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "OrderItem" ADD CONSTRAINT "OrderItem_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "Order"("id") ON DELETE CASCADE ON UPDATE CASCADE;

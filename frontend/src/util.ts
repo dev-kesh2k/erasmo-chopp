@@ -64,8 +64,8 @@ export const METHOD: Record<PaymentMethod, string> = {
 export const addressLine = (o: Pick<Order, 'street' | 'houseNumber' | 'complement' | 'district'>) =>
   [`${o.street}, ${o.houseNumber}`, o.complement, o.district].filter(Boolean).join(' · ');
 
-export const mapsLink = (o: Pick<Order, 'street' | 'houseNumber' | 'district'>) =>
-  `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${o.street}, ${o.houseNumber} - ${o.district}`)}`;
+export const mapsLink = (o: Pick<Order, 'street' | 'houseNumber' | 'district' | 'latitude' | 'longitude'>) =>
+  `https://www.google.com/maps/search/?api=1&query=${o.latitude !== null && o.longitude !== null ? `${o.latitude},${o.longitude}` : encodeURIComponent(`${o.street}, ${o.houseNumber} - ${o.district}`)}`;
 
 /** Converte "350,00" / "350" em centavos. */
 export function parseMoney(v: string): number | null {
@@ -88,10 +88,12 @@ export function orderText(o: Order, storeName: string) {
   const lines = [
     `*Pedido #${o.number}* — ${storeName}`,
     ...o.items.map((i) => `• ${i.quantity}× ${i.name} (${brl(i.unitPriceCents * i.quantity)})`),
-    `Entrega: ${brl(o.feeCents)}`,
+    'Entrega: grátis',
     `*Total: ${brl(o.totalCents)}* · ${METHOD[o.paymentMethod]}${o.changeForCents ? ` (troco para ${brl(o.changeForCents)})` : ''}`,
     `📅 ${fmtLong(o.deliveryDate)}, ${fmtWindow(o.deliveryWindow)}`,
     `📍 ${addressLine(o)}${o.reference ? ` (${o.reference})` : ''}`,
+    ...(o.latitude !== null && o.longitude !== null ? [`🗺️ ${mapsLink(o)}`] : []),
+    `⚡ Máquina ${o.voltage} V`,
     `👤 ${o.customerName} · ${o.phone}`,
   ];
   if (o.notes) lines.push(`Obs.: ${o.notes}`);
