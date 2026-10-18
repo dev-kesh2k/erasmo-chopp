@@ -112,7 +112,7 @@ function Store() {
       <Field label="Sobre a loja">
         <textarea className="input min-h-[120px]" value={s.about} onChange={set('about')} maxLength={1500} />
       </Field>
-      <FormError message={err} />
+      <FormError message={err} onClose={() => setErr('')} />
       <button className="btn-primary" disabled={busy}>
         {busy ? 'Salvando…' : 'Salvar'}
       </button>
@@ -153,7 +153,7 @@ function Account() {
           <PasswordInput autoComplete="current-password" value={f.currentPassword} onChange={(e) => setF({ ...f, currentPassword: e.target.value })} required />
         </Field>
       )}
-      <FormError message={err} />
+      <FormError message={err} onClose={() => setErr('')} />
       <button className="btn-secondary">Salvar conta</button>
       <button type="button" className="btn-danger md:hidden" onClick={signOut}>
         <LogOut size={18} /> Sair
