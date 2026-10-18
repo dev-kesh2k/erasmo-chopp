@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { MapPin } from 'lucide-react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { api, useApi, type Catalog, type Order, type PaymentMethod } from '../../api';
@@ -35,6 +35,8 @@ export default function Checkout() {
   const [mapOpen, setMapOpen] = useState(false);
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
+  // Depois do pedido o carrinho fica vazio: não redirecionar para o carrinho no lugar do ticket.
+  const placed = useRef(false);
 
   useEffect(() => {
     reloadConfig().catch(() => {});
@@ -46,7 +48,7 @@ export default function Checkout() {
     if (win && !windows.includes(win)) setWin('');
   }, [windows, win]);
 
-  if (!Object.keys(cart).length) return <Navigate to="/carrinho" replace />;
+  if (!placed.current && !Object.keys(cart).length) return <Navigate to="/carrinho" replace />;
   if ((loading && !data) || !config) return <Loading />;
   if (error) return <ErrorBox message={error} onRetry={reload} />;
 
@@ -76,9 +78,10 @@ export default function Checkout() {
         changeForCents: changeFor,
         items: lines.map((l) => ({ productId: l.p.id, quantity: l.qty })),
       });
+      placed.current = true;
       saveCustomer({ ...f });
       clearCart();
-      nav(`/pedidos/${o.id}?novo=1`, { replace: true });
+      nav(`/pedidos/${o.id}/ticket`, { replace: true });
     } catch (e2) {
       setErr((e2 as Error).message);
       reload();
