@@ -105,7 +105,7 @@ function Schedule() {
           <input className="input" inputMode="decimal" value={min} onChange={(e) => setMin(e.target.value)} />
         </Field>
       </div>
-      <FormError message={err} />
+      <FormError message={err} onClose={() => setErr('')} />
       <button className="btn-primary" disabled={busy} onClick={save}>
         {busy ? 'Salvando…' : 'Salvar dias e horários'}
       </button>

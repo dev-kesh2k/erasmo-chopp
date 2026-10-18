@@ -19,7 +19,7 @@ export function PhoneGate({ onPhone, text }: { onPhone: (p: string) => void; tex
     <form onSubmit={submit} className="card flex flex-col gap-4 p-5">
       <p className="text-soft">{text}</p>
       <IconInput icon={Phone} inputMode="tel" autoComplete="tel" placeholder="(11) 91234-5678" value={value} onChange={(e) => setValue(maskPhone(e.target.value))} aria-label="Celular" />
-      <FormError message={err} />
+      <FormError message={err} onClose={() => setErr('')} />
       <button className="btn-primary">Ver meus pedidos</button>
     </form>
   );

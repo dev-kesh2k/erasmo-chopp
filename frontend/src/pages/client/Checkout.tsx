@@ -37,6 +37,15 @@ export default function Checkout() {
   const [busy, setBusy] = useState(false);
   // Depois do pedido o carrinho fica vazio: não redirecionar para o carrinho no lugar do ticket.
   const placed = useRef(false);
+  const firstPending = useRef('');
+
+  function closeAlert() {
+    setErr('');
+    const el = firstPending.current && document.getElementById(firstPending.current);
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (el instanceof HTMLInputElement) el.focus({ preventScroll: true });
+  }
 
   useEffect(() => {
     reloadConfig().catch(() => {});
@@ -59,12 +68,24 @@ export default function Checkout() {
 
   async function submit(e: FormEvent) {
     e.preventDefault();
-    setErr('');
-    if (!isValidPhone(f.phone)) return setErr('Informe o celular com DDD.');
-    if (!voltage) return setErr('Escolha a voltagem da máquina: 127 V ou 220 V.');
-    if (!day || !win) return setErr('Escolha o dia e o horário da entrega.');
     const changeFor = method === 'cash' ? parseMoney(change) || 0 : 0;
-    if (changeFor && changeFor < total) return setErr(`O troco deve ser para mais de ${brl(total)}.`);
+    // Tudo o que falta, na ordem da tela; ao fechar o alerta, vai para o primeiro campo pendente.
+    const pending: [string, string][] = [];
+    if (!isValidPhone(f.phone)) pending.push(['ck-phone', 'Celular com DDD']);
+    if (!f.customerName.trim()) pending.push(['ck-name', 'Nome']);
+    if (!f.street.trim()) pending.push(['ck-street', 'Rua']);
+    if (!f.houseNumber.trim()) pending.push(['ck-number', 'Número']);
+    if (!f.district.trim()) pending.push(['ck-district', 'Bairro']);
+    if (!voltage) pending.push(['ck-voltage', 'Voltagem da máquina (127 V ou 220 V)']);
+    if (!day) pending.push(['ck-when', 'Dia da entrega']);
+    else if (!win) pending.push(['ck-when', 'Horário da entrega']);
+    if (changeFor && changeFor < total) pending.push(['ck-change', `Troco para mais de ${brl(total)}`]);
+    if (pending.length) {
+      firstPending.current = pending[0][0];
+      return setErr(pending.length === 1 ? `Falta preencher: ${pending[0][1]}.` : pending.map((p) => p[1]).join('\n'));
+    }
+    firstPending.current = '';
+    setErr('');
     setBusy(true);
     try {
       const o = await api.post<Order>('/orders', {
@@ -99,12 +120,13 @@ export default function Checkout() {
       }
     >
       <PageHead title="Finalizar pedido" back="/carrinho" />
-      <form id="checkout" onSubmit={submit} className="flex flex-col gap-6">
+      <form id="checkout" onSubmit={submit} noValidate className="flex flex-col gap-6">
         <section className="flex flex-col gap-4">
           <h2 className="h2">Seus dados</h2>
           <Field label="Celular (WhatsApp)" hint="Use o mesmo número para acompanhar o pedido.">
             <input
               className="input"
+              id="ck-phone"
               inputMode="tel"
               autoComplete="tel"
               placeholder="(11) 91234-5678"
@@ -114,7 +136,7 @@ export default function Checkout() {
             />
           </Field>
           <Field label="Nome">
-            <input className="input" autoComplete="name" value={f.customerName} onChange={set('customerName')} required maxLength={80} />
+            <input id="ck-name" className="input" autoComplete="name" value={f.customerName} onChange={set('customerName')} required maxLength={80} />
           </Field>
         </section>
 
@@ -122,14 +144,14 @@ export default function Checkout() {
           <h2 className="h2">Endereço de entrega</h2>
           <div className="grid grid-cols-[1fr_6.5rem] gap-3">
             <Field label="Rua">
-              <input className="input" autoComplete="address-line1" value={f.street} onChange={set('street')} required maxLength={160} />
+              <input id="ck-street" className="input" autoComplete="address-line1" value={f.street} onChange={set('street')} required maxLength={160} />
             </Field>
             <Field label="Número">
-              <input className="input" value={f.houseNumber} onChange={set('houseNumber')} required maxLength={20} />
+              <input id="ck-number" className="input" value={f.houseNumber} onChange={set('houseNumber')} required maxLength={20} />
             </Field>
           </div>
           <Field label="Bairro">
-            <input className="input" value={f.district} onChange={set('district')} required maxLength={80} />
+            <input id="ck-district" className="input" value={f.district} onChange={set('district')} required maxLength={80} />
           </Field>
           <Field label="Complemento (opcional)">
             <input className="input" autoComplete="address-line2" value={f.complement} onChange={set('complement')} maxLength={80} placeholder="Apto, bloco, casa…" />
@@ -150,7 +172,7 @@ export default function Checkout() {
         </section>
 
         <section className="flex flex-col gap-3">
-          <h2 className="h2">Voltagem da máquina</h2>
+          <h2 id="ck-voltage" className="h2">Voltagem da máquina</h2>
           <p className="text-sm text-muted">Informe a tomada onde a chopeira será ligada. Obrigatório.</p>
           <div className="grid grid-cols-2 gap-3" role="radiogroup" aria-label="Voltagem da máquina">
             {([127, 220] as const).map((v) => (
@@ -169,7 +191,7 @@ export default function Checkout() {
         </section>
 
         <section className="flex flex-col gap-3">
-          <h2 className="h2">Quando entregar</h2>
+          <h2 id="ck-when" className="h2">Quando entregar</h2>
           {!dates.length ? (
             <p className="rounded-xl bg-warnbg px-4 py-3 text-sm text-warn">Não há datas de entrega disponíveis no momento.</p>
           ) : (
@@ -208,7 +230,7 @@ export default function Checkout() {
           )}
           {method === 'cash' && (
             <Field label="Troco para (opcional)">
-              <input className="input" inputMode="decimal" placeholder="Ex.: 500,00" value={change} onChange={(e) => setChange(e.target.value)} />
+              <input id="ck-change" className="input" inputMode="decimal" placeholder="Ex.: 500,00" value={change} onChange={(e) => setChange(e.target.value)} />
             </Field>
           )}
           <Field label="Observações (opcional)">
@@ -234,7 +256,7 @@ export default function Checkout() {
             <span className="text-accent">{brl(total)}</span>
           </div>
         </section>
-        <FormError message={err} />
+        <FormError message={err} onClose={closeAlert} title={firstPending.current ? 'Faltam informações' : 'Atenção'} />
       </form>
     </FullPage>
   );

@@ -68,7 +68,7 @@ function Categories({ list, reload }: { list: AdminCategory[]; reload: () => voi
           <Plus size={20} />
         </button>
       </form>
-      <FormError message={err} />
+      <FormError message={err} onClose={() => setErr('')} />
     </div>
   );
 }
@@ -294,7 +294,7 @@ export default function Products() {
             <button type="button" className="flex min-h-[44px] items-center gap-3" onClick={() => setDraft({ ...draft, featured: !draft.featured })}>
               <Checkbox on={draft.featured} /> Mostrar em destaque
             </button>
-            <FormError message={err} />
+            <FormError message={err} onClose={() => setErr('')} />
             <button className="btn-primary" disabled={busy}>
               {busy ? 'Salvando…' : 'Salvar'}
             </button>

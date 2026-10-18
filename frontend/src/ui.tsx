@@ -120,12 +120,54 @@ export function Empty({ icon: I, title, text, action }: { icon: LucideIcon; titl
   );
 }
 
-export function FormError({ message }: { message: string }) {
-  if (!message) return null;
+/**
+ * Alerta na tela (sobre a página) para informação pendente ou erro do formulário.
+ * Várias linhas (separadas por \n) viram uma lista. onClose deve limpar a mensagem.
+ */
+export function FormError({ message, onClose, title = 'Atenção' }: { message: string; onClose?: () => void; title?: string }) {
+  const [dismissed, setDismissed] = useState('');
+  const open = !!message && dismissed !== message;
+  const close = () => (onClose ? onClose() : setDismissed(message));
+  useEffect(() => {
+    if (!message) setDismissed('');
+  }, [message]);
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => (e.key === 'Escape' || e.key === 'Enter') && (e.preventDefault(), close());
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  });
+  if (!open) return null;
+  const lines = message.split('\n').filter(Boolean);
   return (
-    <p role="alert" className="flex items-start gap-2 rounded-xl bg-badbg px-4 py-3 text-sm text-bad">
-      <AlertCircle size={18} className="mt-0.5 shrink-0" /> <span className="min-w-0 break-words">{message}</span>
-    </p>
+    <div className="fixed inset-0 z-[55] flex items-end justify-center p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:items-center" role="alertdialog" aria-modal="true" aria-labelledby="form-alert-title">
+      <button type="button" aria-label="Fechar" className="absolute inset-0 bg-black/70" onClick={close} />
+      <div className="relative max-h-[85dvh] w-full max-w-sm overflow-y-auto rounded-[24px] border border-line bg-surface p-6 shadow-2xl">
+        <div className="flex items-center gap-3">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-tint2 text-accent">
+            <AlertCircle size={26} />
+          </span>
+          <h2 id="form-alert-title" className="h2 min-w-0 break-words">
+            {title}
+          </h2>
+        </div>
+        {lines.length > 1 ? (
+          <ul className="mt-4 flex flex-col gap-2">
+            {lines.map((l) => (
+              <li key={l} className="flex gap-2 break-words text-soft">
+                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
+                <span className="min-w-0">{l}</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="mt-4 break-words text-soft">{lines[0]}</p>
+        )}
+        <button type="button" className="btn-primary mt-6 w-full" onClick={close} autoFocus>
+          Entendi
+        </button>
+      </div>
+    </div>
   );
 }
 
