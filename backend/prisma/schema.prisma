@@ -44,16 +44,6 @@ model Product {
   items        OrderItem[]
 }
 
-model DeliveryZone {
-  id        String   @id @default(cuid())
-  name      String
-  feeCents  Int      @default(0)
-  active    Boolean  @default(true)
-  sortOrder Int      @default(0)
-  createdAt DateTime @default(now())
-  orders    Order[]
-}
-
 model Order {
   id             String        @id @default(cuid())
   number         Int           @unique @default(autoincrement())
@@ -63,15 +53,14 @@ model Order {
   street         String
   houseNumber    String
   complement     String        @default("")
-  district       String        @default("")
+  district       String
   reference      String        @default("")
-  zoneId         String?
-  zone           DeliveryZone? @relation(fields: [zoneId], references: [id], onDelete: SetNull)
-  zoneName       String        @default("")
+  latitude       Float?
+  longitude      Float?
+  voltage        Int // voltagem da chopeira/máquina: 127 | 220
   deliveryDate   String // YYYY-MM-DD
   deliveryWindow String
   subtotalCents  Int
-  feeCents       Int
   totalCents     Int
   paymentMethod  String // pix | cash | card
   changeForCents Int           @default(0)

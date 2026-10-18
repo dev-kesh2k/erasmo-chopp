@@ -1,11 +1,14 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import { MapPin } from 'lucide-react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { api, useApi, type Catalog, type Order, type PaymentMethod } from '../../api';
 import { clearCart, getCustomer, isValidPhone, maskPhone, saveCustomer, useCart } from '../../client';
 import { useConfig, reloadConfig } from '../../config';
 import { FullPage } from '../../layout';
 import { ErrorBox, Field, FormError, Loading, PageHead, Radio } from '../../ui';
-import { brl, fmtRelative, fmtWindow, METHOD, parseMoney } from '../../util';
+import { Calendar } from '../../calendar';
+import { MapPicker, type Pin } from '../../MapPicker';
+import { brl, fmtLong, fmtWindow, METHOD, parseMoney } from '../../util';
 
 export default function Checkout() {
   const nav = useNavigate();
@@ -20,13 +23,16 @@ export default function Checkout() {
     houseNumber: saved.houseNumber || '',
     complement: saved.complement || '',
     reference: saved.reference || '',
-    zoneId: saved.zoneId || '',
+    district: saved.district || '',
     notes: '',
   });
   const [day, setDay] = useState('');
   const [win, setWin] = useState('');
   const [method, setMethod] = useState<PaymentMethod>('pix');
   const [change, setChange] = useState('');
+  const [voltage, setVoltage] = useState<127 | 220 | null>(null);
+  const [pin, setPin] = useState<Pin | null>(null);
+  const [mapOpen, setMapOpen] = useState(false);
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -37,9 +43,6 @@ export default function Checkout() {
   const dates = config?.deliveryDates || [];
   const windows = dates.find((d) => d.day === day)?.windows || [];
   useEffect(() => {
-    if (!day && dates.length) setDay(dates[0].day);
-  }, [dates, day]);
-  useEffect(() => {
     if (win && !windows.includes(win)) setWin('');
   }, [windows, win]);
 
@@ -49,16 +52,14 @@ export default function Checkout() {
 
   const lines = (data?.products || []).filter((p) => cart[p.id]).map((p) => ({ p, qty: cart[p.id] }));
   const subtotal = lines.reduce((s, l) => s + l.p.priceCents * l.qty, 0);
-  const zone = data?.zones.find((z) => z.id === f.zoneId);
-  const fee = zone?.feeCents || 0;
-  const total = subtotal + fee;
+  const total = subtotal;
   const set = (k: keyof typeof f) => (e: { target: { value: string } }) => setF((s) => ({ ...s, [k]: e.target.value }));
 
   async function submit(e: FormEvent) {
     e.preventDefault();
     setErr('');
     if (!isValidPhone(f.phone)) return setErr('Informe o celular com DDD.');
-    if (!zone) return setErr('Escolha o bairro de entrega.');
+    if (!voltage) return setErr('Escolha a voltagem da máquina: 127 V ou 220 V.');
     if (!day || !win) return setErr('Escolha o dia e o horário da entrega.');
     const changeFor = method === 'cash' ? parseMoney(change) || 0 : 0;
     if (changeFor && changeFor < total) return setErr(`O troco deve ser para mais de ${brl(total)}.`);
@@ -68,6 +69,9 @@ export default function Checkout() {
         ...f,
         deliveryDate: day,
         deliveryWindow: win,
+        voltage,
+        latitude: pin?.lat ?? null,
+        longitude: pin?.lng ?? null,
         paymentMethod: method,
         changeForCents: changeFor,
         items: lines.map((l) => ({ productId: l.p.id, quantity: l.qty })),
@@ -113,16 +117,6 @@ export default function Checkout() {
 
         <section className="flex flex-col gap-4">
           <h2 className="h2">Endereço de entrega</h2>
-          <Field label="Bairro">
-            <select className="input" value={f.zoneId} onChange={set('zoneId')} required>
-              <option value="">Escolha o bairro</option>
-              {data?.zones.map((z) => (
-                <option key={z.id} value={z.id}>
-                  {z.name} — {z.feeCents ? brl(z.feeCents) : 'grátis'}
-                </option>
-              ))}
-            </select>
-          </Field>
           <div className="grid grid-cols-[1fr_6.5rem] gap-3">
             <Field label="Rua">
               <input className="input" autoComplete="address-line1" value={f.street} onChange={set('street')} required maxLength={160} />
@@ -131,12 +125,44 @@ export default function Checkout() {
               <input className="input" value={f.houseNumber} onChange={set('houseNumber')} required maxLength={20} />
             </Field>
           </div>
+          <Field label="Bairro">
+            <input className="input" value={f.district} onChange={set('district')} required maxLength={80} />
+          </Field>
           <Field label="Complemento (opcional)">
             <input className="input" autoComplete="address-line2" value={f.complement} onChange={set('complement')} maxLength={80} placeholder="Apto, bloco, casa…" />
           </Field>
           <Field label="Ponto de referência (opcional)">
             <input className="input" value={f.reference} onChange={set('reference')} maxLength={160} />
           </Field>
+          <div className="flex flex-col gap-3">
+            <button type="button" className={`card flex min-h-[56px] items-center gap-3 px-4 text-left ${pin ? 'border-accent' : ''}`} onClick={() => setMapOpen((v) => !v)} aria-expanded={mapOpen}>
+              <MapPin size={22} className="shrink-0 text-accent" />
+              <span className="min-w-0 flex-1">
+                <span className="block font-medium">{pin ? 'Local marcado no mapa' : 'Marcar o local no mapa'}</span>
+                <span className="block text-sm text-muted">Opcional, ajuda o entregador a achar você</span>
+              </span>
+            </button>
+            {mapOpen && <MapPicker value={pin} onChange={setPin} addressQuery={[f.street, f.houseNumber, f.district].filter(Boolean).join(', ')} />}
+          </div>
+        </section>
+
+        <section className="flex flex-col gap-3">
+          <h2 className="h2">Voltagem da máquina</h2>
+          <p className="text-sm text-muted">Informe a tomada onde a chopeira será ligada. Obrigatório.</p>
+          <div className="grid grid-cols-2 gap-3" role="radiogroup" aria-label="Voltagem da máquina">
+            {([127, 220] as const).map((v) => (
+              <button
+                type="button"
+                key={v}
+                role="radio"
+                aria-checked={voltage === v}
+                onClick={() => setVoltage(v)}
+                className={`card flex min-h-[64px] items-center justify-center gap-3 text-lg font-bold ${voltage === v ? 'border-accent text-accent' : ''}`}
+              >
+                <Radio on={voltage === v} /> {v} V
+              </button>
+            ))}
+          </div>
         </section>
 
         <section className="flex flex-col gap-3">
@@ -145,20 +171,21 @@ export default function Checkout() {
             <p className="rounded-xl bg-warnbg px-4 py-3 text-sm text-warn">Não há datas de entrega disponíveis no momento.</p>
           ) : (
             <>
-              <div className="no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5 min-[380px]:-mx-6 min-[380px]:px-6">
-                {dates.map((d) => (
-                  <button type="button" key={d.day} className={`chip ${day === d.day ? 'chip-on' : ''}`} onClick={() => setDay(d.day)}>
-                    {fmtRelative(d.day, config.today)}
-                  </button>
-                ))}
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                {windows.map((w) => (
-                  <button type="button" key={w} className={`chip ${win === w ? 'chip-on' : ''}`} onClick={() => setWin(w)}>
-                    {fmtWindow(w)}
-                  </button>
-                ))}
-              </div>
+              <Calendar available={dates.map((d) => d.day)} value={day} today={config.today} onChange={setDay} />
+              {day && (
+                <>
+                  <p className="font-medium">
+                    {fmtLong(day)} — escolha o horário
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {windows.map((w) => (
+                      <button type="button" key={w} className={`chip ${win === w ? 'chip-on' : ''}`} onClick={() => setWin(w)}>
+                        {fmtWindow(w)}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
             </>
           )}
         </section>
@@ -196,8 +223,8 @@ export default function Checkout() {
             </div>
           ))}
           <div className="mt-2 flex justify-between border-t border-line pt-3 text-sm">
-            <span className="text-soft">Entrega{zone ? ` (${zone.name})` : ''}</span>
-            <span>{zone ? (fee ? brl(fee) : 'Grátis') : '—'}</span>
+            <span className="text-soft">Entrega</span>
+            <span className="font-medium text-ok">Grátis</span>
           </div>
           <div className="flex justify-between text-lg font-bold">
             <span>Total</span>

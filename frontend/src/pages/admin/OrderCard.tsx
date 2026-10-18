@@ -66,6 +66,10 @@ export function OrderCard({ order, onChange, storeName }: { order: Order; onChan
         <p className="break-words font-bold">{o.customerName}</p>
         <p className="break-words text-sm text-soft">{addressLine(o)}</p>
         {o.reference && <p className="text-sm text-muted">Ref.: {o.reference}</p>}
+        <div className="mt-2 flex flex-wrap gap-2">
+          <span className="inline-flex items-center gap-1 rounded-full bg-tint2 px-3 py-1 text-sm font-bold text-accent">⚡ Máquina {o.voltage} V</span>
+          {o.latitude !== null && <span className="inline-flex items-center gap-1 rounded-full bg-okbg px-3 py-1 text-sm font-bold text-ok">📍 Local no mapa</span>}
+        </div>
       </div>
       <ul className="flex flex-col gap-1 rounded-2xl bg-surface2 p-3 text-sm">
         {o.items.map((i) => (
@@ -77,8 +81,8 @@ export function OrderCard({ order, onChange, storeName }: { order: Order; onChan
           </li>
         ))}
         <li className="flex justify-between gap-3 text-muted">
-          <span>Entrega ({o.zoneName})</span>
-          <span>{brl(o.feeCents)}</span>
+          <span>Entrega</span>
+          <span>Grátis</span>
         </li>
       </ul>
       <div className="flex flex-wrap items-center justify-between gap-2">

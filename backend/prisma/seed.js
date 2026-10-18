@@ -27,12 +27,6 @@ const CATALOG = [
   },
 ];
 
-const ZONES = [
-  { name: 'Centro', feeCents: 0 },
-  { name: 'Bairro vizinho', feeCents: 1500 },
-  { name: 'Outros bairros', feeCents: 3000 },
-];
-
 async function main() {
   const email = (process.env.SEED_ADMIN_EMAIL || 'admin@example.com').trim().toLowerCase();
   const password = process.env.SEED_ADMIN_PASSWORD;
@@ -54,11 +48,6 @@ async function main() {
       for (const [pi, p] of c.products.entries()) await prisma.product.create({ data: { ...p, categoryId: cat.id, sortOrder: pi } });
     }
     console.log('Cardápio inicial criado');
-  }
-
-  if ((await prisma.deliveryZone.count()) === 0) {
-    for (const [i, z] of ZONES.entries()) await prisma.deliveryZone.create({ data: { ...z, sortOrder: i } });
-    console.log('Bairros iniciais criados');
   }
 
   await prisma.setting.upsert({ where: { key: 'storeName' }, update: {}, create: { key: 'storeName', value: "Erasmo Chopp" } });

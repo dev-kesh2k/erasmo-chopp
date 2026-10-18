@@ -81,6 +81,7 @@ export default function OrderDetail() {
           </p>
           <p className="mt-1 break-words text-soft">{addressLine(o)}</p>
           {o.reference && <p className="text-sm text-muted">Ref.: {o.reference}</p>}
+          <p className="mt-1 text-sm text-muted">Máquina {o.voltage} V{o.latitude !== null ? ' · local marcado no mapa' : ''}</p>
         </div>
 
         <div className="card flex flex-col gap-2 p-5">
@@ -93,8 +94,8 @@ export default function OrderDetail() {
             </div>
           ))}
           <div className="mt-2 flex justify-between border-t border-line pt-3 text-sm">
-            <span className="text-soft">Entrega ({o.zoneName})</span>
-            <span>{o.feeCents ? brl(o.feeCents) : 'Grátis'}</span>
+            <span className="text-soft">Entrega</span>
+            <span>Grátis</span>
           </div>
           <div className="flex justify-between text-lg font-bold">
             <span>Total</span>

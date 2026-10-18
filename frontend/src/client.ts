@@ -46,7 +46,7 @@ export interface SavedCustomer {
   houseNumber: string;
   complement: string;
   reference: string;
-  zoneId: string;
+  district: string;
 }
 
 export function getCustomer(): Partial<SavedCustomer> {

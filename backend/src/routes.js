@@ -52,17 +52,15 @@ api.get('/logo', wrap(async (_req, res) => {
 
 // ---------- Cardápio ----------
 api.get('/catalog', wrap(async (_req, res) => {
-  const [categories, products, zones] = await Promise.all([
+  const [categories, products] = await Promise.all([
     prisma.category.findMany({ orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }] }),
     prisma.product.findMany({ where: { active: true }, orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }] }),
-    prisma.deliveryZone.findMany({ where: { active: true }, orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }] }),
   ]);
   const catOrder = new Map(categories.map((c, i) => [c.id, i]));
   const rank = (p) => catOrder.get(p.categoryId) ?? categories.length;
   res.json({
     categories: categories.filter((c) => products.some((p) => p.categoryId === c.id)).map((c) => ({ id: c.id, name: c.name })),
     products: products.sort((a, b) => rank(a) - rank(b)).map(({ createdAt, sortOrder, ...p }) => p),
-    zones: zones.map((z) => ({ id: z.id, name: z.name, feeCents: z.feeCents })),
   });
 }));
 

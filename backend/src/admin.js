@@ -189,30 +189,6 @@ admin.delete('/products/:id/photo', wrap(async (req, res) => {
   res.json({ photoVersion: 0 });
 }));
 
-// ---------- Bairros e taxas de entrega ----------
-admin.get('/zones', wrap(async (_req, res) => {
-  res.json(await prisma.deliveryZone.findMany({ orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }] }));
-}));
-
-const zoneData = (b) => ({
-  name: text(b.name, 'Bairro', { required: true, max: 80 }),
-  feeCents: int(b.feeCents, 'Taxa de entrega', { min: 0, max: 10_000_000 }),
-  active: b.active !== false,
-});
-
-admin.post('/zones', wrap(async (req, res) => {
-  res.status(201).json(await prisma.deliveryZone.create({ data: zoneData(req.body || {}) }));
-}));
-
-admin.put('/zones/:id', wrap(async (req, res) => {
-  res.json(await prisma.deliveryZone.update({ where: { id: req.params.id }, data: zoneData(req.body || {}) }));
-}));
-
-admin.delete('/zones/:id', wrap(async (req, res) => {
-  await prisma.deliveryZone.delete({ where: { id: req.params.id } });
-  res.json({ ok: true });
-}));
-
 // ---------- Financeiro ----------
 admin.get('/finance', wrap(async (req, res) => {
   const month = String(req.query.month || todayStr().slice(0, 7));
@@ -227,11 +203,9 @@ admin.get('/finance', wrap(async (req, res) => {
   const byMethod = { pix: 0, cash: 0, card: 0 };
   const products = new Map();
   let total = 0;
-  let fees = 0;
   let unpaid = 0;
   for (const o of orders) {
     total += o.totalCents;
-    fees += o.feeCents;
     if (!o.paid) unpaid += o.totalCents;
     byDay[o.deliveryDate] = (byDay[o.deliveryDate] || 0) + o.totalCents;
     byMethod[o.paymentMethod] = (byMethod[o.paymentMethod] || 0) + o.totalCents;
@@ -246,7 +220,6 @@ admin.get('/finance', wrap(async (req, res) => {
   res.json({
     month,
     totalCents: total,
-    feesCents: fees,
     unpaidCents: unpaid,
     orders: orders.length,
     cancelled,

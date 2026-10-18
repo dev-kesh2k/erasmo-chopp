@@ -1,99 +1,9 @@
-import { useEffect, useState, type FormEvent } from 'react';
-import { MapPin, Plus, Trash2, X } from 'lucide-react';
-import { api, useApi, type Settings, type Zone } from '../../api';
+import { useEffect, useState } from 'react';
+import { Plus, X } from 'lucide-react';
+import { api, useApi, type Settings } from '../../api';
 import { reloadConfig } from '../../config';
-import { Checkbox, Empty, ErrorBox, Field, FormError, Loading, PageHead, Sheet, Switch, toast } from '../../ui';
-import { brl, fmtWindow, moneyInput, parseMoney, WEEKDAYS_SHORT } from '../../util';
-
-function Zones() {
-  const { data, error, loading, reload } = useApi<Zone[]>('/admin/zones');
-  const [draft, setDraft] = useState<{ id?: string; name: string; fee: string; active: boolean } | null>(null);
-  const [err, setErr] = useState('');
-
-  async function save(e: FormEvent) {
-    e.preventDefault();
-    if (!draft) return;
-    const fee = parseMoney(draft.fee || '0');
-    if (fee === null) return setErr('Taxa inválida');
-    try {
-      const body = { name: draft.name, feeCents: fee, active: draft.active };
-      if (draft.id) await api.put(`/admin/zones/${draft.id}`, body);
-      else await api.post('/admin/zones', body);
-      setDraft(null);
-      reload();
-    } catch (e2) {
-      setErr((e2 as Error).message);
-    }
-  }
-
-  async function remove() {
-    if (!draft?.id || !confirm(`Excluir o bairro ${draft.name}?`)) return;
-    await api.del(`/admin/zones/${draft.id}`).catch((e) => toast((e as Error).message, true));
-    setDraft(null);
-    reload();
-  }
-
-  if (loading && !data) return <Loading />;
-  if (error) return <ErrorBox message={error} onRetry={reload} />;
-
-  return (
-    <section>
-      <div className="mb-3 flex items-center gap-3">
-        <h2 className="h2 flex-1">Bairros e taxas</h2>
-        <button
-          className="btn-pill"
-          onClick={() => {
-            setErr('');
-            setDraft({ name: '', fee: '', active: true });
-          }}
-        >
-          <Plus size={20} /> <span className="hidden min-[400px]:inline">Bairro</span>
-        </button>
-      </div>
-      {!data?.length ? (
-        <Empty icon={MapPin} title="Nenhum bairro" text="Sem bairros cadastrados o cliente não consegue finalizar o pedido." />
-      ) : (
-        <div className="card divide-y divide-line">
-          {data.map((z) => (
-            <button
-              key={z.id}
-              className={`flex min-h-[56px] w-full items-center gap-3 px-4 text-left ${z.active ? '' : 'opacity-50'}`}
-              onClick={() => {
-                setErr('');
-                setDraft({ id: z.id, name: z.name, fee: moneyInput(z.feeCents), active: z.active !== false });
-              }}
-            >
-              <span className="min-w-0 flex-1 truncate font-medium">{z.name}</span>
-              <span className="text-soft">{z.feeCents ? brl(z.feeCents) : 'Grátis'}</span>
-            </button>
-          ))}
-        </div>
-      )}
-      <Sheet open={!!draft} onClose={() => setDraft(null)} title={draft?.id ? 'Editar bairro' : 'Novo bairro'}>
-        {draft && (
-          <form onSubmit={save} className="flex flex-col gap-4">
-            <Field label="Bairro / região">
-              <input className="input" value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} required maxLength={80} />
-            </Field>
-            <Field label="Taxa de entrega (R$)" hint="0 = entrega grátis">
-              <input className="input" inputMode="decimal" value={draft.fee} onChange={(e) => setDraft({ ...draft, fee: e.target.value })} />
-            </Field>
-            <button type="button" className="flex min-h-[44px] items-center gap-3" onClick={() => setDraft({ ...draft, active: !draft.active })}>
-              <Checkbox on={draft.active} /> Entregamos neste bairro
-            </button>
-            <FormError message={err} />
-            <button className="btn-primary">Salvar</button>
-            {draft.id && (
-              <button type="button" className="btn-danger" onClick={remove}>
-                <Trash2 size={18} /> Excluir
-              </button>
-            )}
-          </form>
-        )}
-      </Sheet>
-    </section>
-  );
-}
+import { ErrorBox, Field, FormError, Loading, PageHead, Switch, toast } from '../../ui';
+import { fmtWindow, moneyInput, parseMoney, WEEKDAYS_SHORT } from '../../util';
 
 function Schedule() {
   const { data, error, loading, reload } = useApi<Settings>('/admin/settings');
@@ -145,6 +55,7 @@ function Schedule() {
   return (
     <section className="flex flex-col gap-5">
       <h2 className="h2">Dias e horários</h2>
+      <p className="-mt-3 text-sm text-muted">A entrega é grátis. O cliente escolhe o dia no calendário e uma das faixas de horário abaixo.</p>
       <div>
         <p className="label">Dias com entrega</p>
         <div className="grid grid-cols-7 gap-1.5">
@@ -225,8 +136,7 @@ export default function Delivery() {
           <Switch checked={settings.data.acceptingOrders} onChange={toggle} label="Recebendo pedidos" />
         </div>
       )}
-      <div className="grid gap-8 lg:grid-cols-2">
-        <Zones />
+      <div className="max-w-2xl">
         <Schedule />
       </div>
     </div>
