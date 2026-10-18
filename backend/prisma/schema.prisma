@@ -1,0 +1,110 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         String   @default("admin")
+  createdAt    DateTime @default(now())
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String
+  sortOrder Int       @default(0)
+  createdAt DateTime  @default(now())
+  products  Product[]
+}
+
+model Product {
+  id           String      @id @default(cuid())
+  categoryId   String?
+  category     Category?   @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  name         String
+  description  String      @default("")
+  unit         String      @default("un") // ex.: "barril 30 L", "litro", "un"
+  priceCents   Int
+  stock        Int? // null = sem controle de estoque
+  active       Boolean     @default(true)
+  featured     Boolean     @default(false)
+  photo        Bytes?
+  photoMime    String      @default("")
+  photoVersion Int         @default(0)
+  sortOrder    Int         @default(0)
+  createdAt    DateTime    @default(now())
+  items        OrderItem[]
+}
+
+model DeliveryZone {
+  id        String   @id @default(cuid())
+  name      String
+  feeCents  Int      @default(0)
+  active    Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  orders    Order[]
+}
+
+model Order {
+  id             String        @id @default(cuid())
+  number         Int           @unique @default(autoincrement())
+  customerName   String
+  phone          String
+  phoneKey       String
+  street         String
+  houseNumber    String
+  complement     String        @default("")
+  district       String        @default("")
+  reference      String        @default("")
+  zoneId         String?
+  zone           DeliveryZone? @relation(fields: [zoneId], references: [id], onDelete: SetNull)
+  zoneName       String        @default("")
+  deliveryDate   String // YYYY-MM-DD
+  deliveryWindow String
+  subtotalCents  Int
+  feeCents       Int
+  totalCents     Int
+  paymentMethod  String // pix | cash | card
+  changeForCents Int           @default(0)
+  paid           Boolean       @default(false)
+  status         String        @default("received") // received | confirmed | out_for_delivery | delivered | cancelled
+  notes          String        @default("")
+  cancelReason   String        @default("")
+  deliveredAt    DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  items          OrderItem[]
+
+  @@index([phoneKey])
+  @@index([deliveryDate])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id             String   @id @default(cuid())
+  orderId        String
+  order          Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId      String?
+  product        Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  name           String
+  unit           String   @default("")
+  unitPriceCents Int
+  quantity       Int
+
+  @@index([orderId])
+}
+
+model Setting {
+  key   String @id
+  value String
+}
