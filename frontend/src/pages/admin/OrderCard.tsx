@@ -64,11 +64,17 @@ export function OrderCard({ order, onChange, storeName }: { order: Order; onChan
       </div>
       <div className="min-w-0">
         <p className="break-words font-bold">{o.customerName}</p>
-        <p className="break-words text-sm text-soft">{addressLine(o)}</p>
+        <a href={mapsLink(o)} target="_blank" rel="noreferrer" className="block break-words text-sm text-soft underline decoration-line2 underline-offset-4">
+          {addressLine(o)}
+        </a>
         {o.reference && <p className="text-sm text-muted">Ref.: {o.reference}</p>}
         <div className="mt-2 flex flex-wrap gap-2">
           <span className="inline-flex items-center gap-1 rounded-full bg-tint2 px-3 py-1 text-sm font-bold text-accent">⚡ Máquina {o.voltage} V</span>
-          {o.latitude !== null && <span className="inline-flex items-center gap-1 rounded-full bg-okbg px-3 py-1 text-sm font-bold text-ok">📍 Local no mapa</span>}
+          {o.latitude !== null && (
+            <a href={mapsLink(o)} target="_blank" rel="noreferrer" className="inline-flex min-h-[32px] items-center gap-1 rounded-full bg-okbg px-3 py-1 text-sm font-bold text-ok">
+              📍 Ver local no mapa
+            </a>
+          )}
         </div>
       </div>
       <ul className="flex flex-col gap-1 rounded-2xl bg-surface2 p-3 text-sm">
@@ -103,14 +109,14 @@ export function OrderCard({ order, onChange, storeName }: { order: Order; onChan
       {o.status === 'cancelled' && o.cancelReason && <p className="text-sm text-bad">{o.cancelReason}</p>}
 
       <div className="grid grid-cols-3 gap-2">
-        <a className="btn-secondary min-h-[44px] px-2 text-sm" href={waLink(o.phone, waText)} target="_blank" rel="noreferrer" aria-label="WhatsApp do cliente">
-          <MessageCircle size={18} /> <span className="hidden min-[400px]:inline">WhatsApp</span>
+        <a className="btn-secondary min-h-[56px] flex-col gap-0.5 px-1 text-[13px] min-[400px]:flex-row min-[400px]:gap-2 min-[400px]:text-sm" href={waLink(o.phone, waText)} target="_blank" rel="noreferrer" aria-label="WhatsApp do cliente">
+          <MessageCircle size={18} /> <span>WhatsApp</span>
         </a>
-        <a className="btn-secondary min-h-[44px] px-2 text-sm" href={`tel:${o.phone.replace(/\D/g, '')}`} aria-label="Ligar">
-          <Phone size={18} /> <span className="hidden min-[400px]:inline">Ligar</span>
+        <a className="btn-secondary min-h-[56px] flex-col gap-0.5 px-1 text-[13px] min-[400px]:flex-row min-[400px]:gap-2 min-[400px]:text-sm" href={`tel:${o.phone.replace(/\D/g, '')}`} aria-label="Ligar">
+          <Phone size={18} /> <span>Ligar</span>
         </a>
-        <a className="btn-secondary min-h-[44px] px-2 text-sm" href={mapsLink(o)} target="_blank" rel="noreferrer" aria-label="Abrir no mapa">
-          <MapPin size={18} /> <span className="hidden min-[400px]:inline">Mapa</span>
+        <a className="btn-secondary min-h-[56px] flex-col gap-0.5 px-1 text-[13px] min-[400px]:flex-row min-[400px]:gap-2 min-[400px]:text-sm" href={mapsLink(o)} target="_blank" rel="noreferrer" aria-label="Abrir no mapa">
+          <MapPin size={18} /> <span>Mapa</span>
         </a>
       </div>
       {(next || o.status === 'received' || o.status === 'confirmed' || o.status === 'out_for_delivery') && (
