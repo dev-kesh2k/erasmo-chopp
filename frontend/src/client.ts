@@ -92,6 +92,23 @@ export function setQty(productId: string, qty: number) {
 
 export const clearCart = () => writeCart({});
 
+/**
+ * "Pedir de novo": soma ao carrinho os itens de um pedido antigo. Itens sem produto (apagado) ficam de fora;
+ * o carrinho já descarta o que não estiver mais no cardápio e o servidor confere o estoque no checkout.
+ * Devolve quantos itens entraram.
+ */
+export function addItemsToCart(items: { productId: string | null; quantity: number }[]): number {
+  const c = { ...readCart() };
+  let added = 0;
+  for (const i of items) {
+    if (!i.productId || !(i.quantity > 0)) continue;
+    c[i.productId] = Math.min(999, (c[i.productId] || 0) + Math.floor(i.quantity));
+    added += 1;
+  }
+  if (added) writeCart(c);
+  return added;
+}
+
 export function useCart() {
   const [cart, setCart] = useState<Cart>(readCart);
   useEffect(() => {
