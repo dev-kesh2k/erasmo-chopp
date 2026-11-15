@@ -70,6 +70,16 @@ function hits(key) {
 export const tooManyAttempts = (key) => hits(`login:${key}`).length >= 10;
 export const recordFailure = (key) => hits(`login:${key}`).push(Date.now());
 export const clearFailures = (key) => buckets.delete(`login:${key}`);
+/** Apaga as listas vencidas (antes cada IP que passou ficava no mapa para sempre). */
+export function sweepBuckets(map = buckets, now = Date.now()) {
+  for (const [k, list] of map) {
+    const recent = list.filter((t) => now - t < WINDOW);
+    if (recent.length) map.set(k, recent);
+    else map.delete(k);
+  }
+  return map.size;
+}
+setInterval(() => sweepBuckets(), 10 * 60_000).unref();
 export function limit(ip, kind, max) {
   const list = hits(`${kind}:${ip}`);
   if (list.length >= max) throw new HttpError(429, 'Muitas tentativas. Aguarde alguns minutos.');
