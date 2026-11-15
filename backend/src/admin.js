@@ -20,6 +20,7 @@ import {
   STATUSES,
   OPEN_STATUSES,
 } from './util.js';
+import { ordersCsv } from './orders-csv.js';
 import { orderInclude, serializeOrder, restock } from './orders.js';
 
 export const admin = express.Router();
@@ -228,6 +229,17 @@ admin.get('/finance', wrap(async (req, res) => {
     byMethod,
     topProducts: [...products.values()].sort((a, b) => b.totalCents - a.totalCents).slice(0, 10),
   });
+}));
+
+/** Todos os pedidos do mês (qualquer status), pela data de entrega, em CSV. */
+admin.get('/finance/export', wrap(async (req, res) => {
+  const month = String(req.query.month || todayStr().slice(0, 7));
+  if (!isMonth(month)) throw new HttpError(400, 'Mês inválido');
+  const { from, to } = monthRange(month);
+  const orders = await prisma.order.findMany({ where: { deliveryDate: { gte: from, lte: to } }, include: { items: true } });
+  res.set('Content-Type', 'text/csv; charset=utf-8');
+  res.set('Content-Disposition', `attachment; filename="pedidos-${month}.csv"`);
+  res.send(ordersCsv(orders));
 }));
 
 // ---------- Configurações ----------
