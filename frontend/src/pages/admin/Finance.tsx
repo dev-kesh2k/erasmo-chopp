@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useApi } from '../../api';
+import { ChevronLeft, ChevronRight, Download } from 'lucide-react';
+import { downloadFile, useApi } from '../../api';
 import { useConfig } from '../../config';
 import { ErrorBox, Loading, PageHead } from '../../ui';
 import { brl, dayNum, METHOD, MONTHS } from '../../util';
@@ -29,6 +29,20 @@ export default function FinancePage() {
   const { data, error, loading, reload } = useApi<Finance>(`/admin/finance?month=${month}`);
   const [y, m] = month.split('-').map(Number);
   const max = Math.max(1, ...(data?.byDay.map((d) => d.cents) || [0]));
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState('');
+
+  const exportCsv = async () => {
+    setExporting(true);
+    setExportError('');
+    try {
+      await downloadFile(`/admin/finance/export?month=${month}`, `pedidos-${month}.csv`);
+    } catch (err) {
+      setExportError((err as Error).message);
+    } finally {
+      setExporting(false);
+    }
+  };
 
   return (
     <div>
@@ -43,6 +57,12 @@ export default function FinancePage() {
         <button className="icon-btn" aria-label="Próximo mês" onClick={() => setMonth(shift(month, 1))}>
           <ChevronRight size={22} />
         </button>
+      </div>
+      <div className="mb-5">
+        <button type="button" className="btn-secondary w-full" onClick={exportCsv} disabled={exporting}>
+          <Download size={18} /> {exporting ? 'Gerando planilha…' : 'Baixar pedidos do mês (CSV)'}
+        </button>
+        {exportError && <p className="mt-2 text-sm text-red-600">{exportError}</p>}
       </div>
       {loading && !data ? (
         <Loading />
