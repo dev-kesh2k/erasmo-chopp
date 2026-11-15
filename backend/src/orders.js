@@ -1,17 +1,5 @@
-import {
-  prisma,
-  HttpError,
-  text,
-  int,
-  oneOf,
-  mobile,
-  isDay,
-  getSettings,
-  deliveryDates,
-  windowsFor,
-  brl,
-  PAYMENT_METHODS,
-} from './util.js';
+import { prisma, HttpError, int, isDay, getSettings, deliveryDates, windowsFor, brl } from './util.js';
+import { parseOrderInput } from './order-input.js';
 
 export const orderInclude = { items: { orderBy: { id: 'asc' } } };
 
@@ -57,37 +45,11 @@ export async function createOrder(body) {
   const s = await getSettings();
   if (!s.acceptingOrders) throw new HttpError(409, 'A loja não está recebendo pedidos no momento');
 
-  const { raw, key } = mobile(body.phone);
-  const customerName = text(body.customerName, 'Nome', { required: true, max: 80 });
-  const district = text(body.district, 'Bairro', { required: true, max: 80 });
-  const street = text(body.street, 'Endereço', { required: true, max: 160 });
-  const houseNumber = text(body.houseNumber, 'Número', { required: true, max: 20 });
-  const complement = text(body.complement, 'Complemento', { max: 80 });
-  const reference = text(body.reference, 'Ponto de referência', { max: 160 });
-  const voltage = Number(body.voltage);
-  if (![127, 220].includes(voltage)) throw new HttpError(400, 'Informe a voltagem da máquina: 127 V ou 220 V');
-  const hasPin = body.latitude !== null && body.latitude !== undefined && body.latitude !== '';
-  let latitude = null;
-  let longitude = null;
-  if (hasPin) {
-    latitude = Number(body.latitude);
-    longitude = Number(body.longitude);
-    if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || Math.abs(latitude) > 90 || Math.abs(longitude) > 180) throw new HttpError(400, 'Localização no mapa inválida');
-  }
-  const notes = text(body.notes, 'Observações', { max: 500 });
-  const paymentMethod = oneOf(body.paymentMethod, 'Forma de pagamento', PAYMENT_METHODS);
+  const input = parseOrderInput(body);
+  const { customerName, district, street, houseNumber, complement, reference, voltage, latitude, longitude, notes, paymentMethod, wanted } = input;
 
   if (!isDay(body.deliveryDate) || !deliveryDates(s).includes(body.deliveryDate)) throw new HttpError(400, 'Escolha uma data de entrega disponível');
   if (!windowsFor(s, body.deliveryDate).includes(body.deliveryWindow)) throw new HttpError(400, 'Escolha um horário de entrega disponível');
-
-  if (!Array.isArray(body.items) || !body.items.length) throw new HttpError(400, 'O carrinho está vazio');
-  if (body.items.length > 50) throw new HttpError(400, 'Itens demais no pedido');
-  const wanted = new Map();
-  for (const it of body.items) {
-    const id = String(it?.productId || '');
-    const qty = int(it?.quantity, 'Quantidade', { min: 1, max: 999 });
-    wanted.set(id, (wanted.get(id) || 0) + qty);
-  }
 
   return prisma.$transaction(async (tx) => {
     const products = await tx.product.findMany({ where: { id: { in: [...wanted.keys()] }, active: true } });
@@ -116,8 +78,8 @@ export async function createOrder(body) {
     return tx.order.create({
       data: {
         customerName,
-        phone: raw,
-        phoneKey: key,
+        phone: input.phone,
+        phoneKey: input.phoneKey,
         street,
         houseNumber,
         complement,
