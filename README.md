@@ -1,5 +1,7 @@
 # Erasmo Chopp
 
+[![Testes](https://github.com/dev-kesh2k/erasmo-chopp/actions/workflows/ci.yml/badge.svg)](https://github.com/dev-kesh2k/erasmo-chopp/actions/workflows/ci.yml)
+
 Template de app de **pedido e entrega** (web e celular, instalável na Tela de Início): distribuidoras de chopp/bebidas, gás e água, marmitas, padarias etc. O nome da loja fica em Configurações (`storeName`, padrão "Meu Negócio"). No Criador de apps do Hub, `scripts/app-builder-template.js <slug> --name "Nome" --template pedido-entrega` copia este template para `projetos/<slug>`.
 
 - **Cliente (sem login):** cardápio com categorias, busca, destaques e fotos; carrinho salvo no aparelho; finalizar pedido com celular, nome, endereço (com bairro) e, se quiser, o local exato marcado no mapa (pino, localização do aparelho ou busca pelo endereço — OpenStreetMap), **voltagem da máquina 127 V ou 220 V (obrigatória)**, dia da entrega escolhido num calendário (só os dias de entrega da loja ficam ativos) e faixa de horário, pagamento na entrega (Pix com a chave da loja, dinheiro com troco, cartão) e observações. Em "Pedidos" o cliente informa o celular e acompanha a situação (recebido → confirmado → saiu para entrega → entregue), cancela enquanto ainda não foi confirmado e manda o resumo para o WhatsApp da loja.
@@ -32,3 +34,13 @@ npm run dev
 
 ## Publicação
 Todo push na `main` publica o app no Central Apps Hub pelo GitHub Actions (`.github/workflows/deploy.yml`). Mudanças só em documentação não disparam o deploy.
+
+## Testes
+
+Testes do backend com o executor nativo do Node (`node:test`), sem banco e sem servidor rodando:
+
+```bash
+node --test backend/test/*.test.js
+```
+
+Cobrem as regras puras do backend (dates, store-rules, validate). O GitHub Actions roda os mesmos testes em cada push e pull request (workflow `Testes`); mudanças só em `backend/test/` não republicam o app.
