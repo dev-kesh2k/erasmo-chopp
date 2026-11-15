@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { MessageCircle, Ticket } from 'lucide-react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { MessageCircle, RotateCcw, Ticket } from 'lucide-react';
 import { api, useApi, type Order } from '../../api';
-import { phoneDigits, useSavedPhone } from '../../client';
+import { addItemsToCart, phoneDigits, useSavedPhone } from '../../client';
 import { useConfig } from '../../config';
 import { ErrorBox, Loading, PageHead, StatusPill, toast } from '../../ui';
 import { addressLine, brl, FLOW, fmtLong, fmtWindow, METHOD, orderText, STATUS, waLink } from '../../util';
@@ -25,6 +25,7 @@ function Timeline({ status }: { status: Order['status'] }) {
 
 export default function OrderDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const config = useConfig();
   const [phone, setPhone] = useSavedPhone();
   const path = phone ? `/orders/${id}?phone=${phoneDigits(phone)}` : null;
@@ -99,6 +100,19 @@ export default function OrderDetail() {
           {o.notes && <p className="text-sm text-muted">Obs.: {o.notes}</p>}
         </div>
 
+        {(o.status === 'delivered' || o.status === 'cancelled') && (
+          <button
+            className="btn-primary"
+            onClick={() => {
+              const n = addItemsToCart(o.items);
+              if (!n) return toast('Os produtos deste pedido não estão mais no cardápio.', true);
+              toast('Itens adicionados ao carrinho');
+              navigate('/carrinho');
+            }}
+          >
+            <RotateCcw size={20} /> Pedir de novo
+          </button>
+        )}
         <Link to={`/pedidos/${o.id}/ticket`} className="btn-secondary">
           <Ticket size={20} /> Ver ticket
         </Link>
