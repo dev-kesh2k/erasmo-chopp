@@ -4,6 +4,7 @@ Mudanças relevantes do app, da mais nova para a mais antiga. Cada item é um pu
 
 ## 2026-11-15
 
+- **Novo:** pedido entregue ou cancelado tem *Pedir de novo*, que coloca os mesmos itens no carrinho (#27–#28)
 - **Novo:** Financeiro → *Baixar pedidos do mês (CSV)*, com cliente, itens, valores, pagamento e status (#21–#25)
 - **Saúde:** /health testa o banco e responde 503 se o Postgres cair (#20)
 - Segurança: react-router v7 no frontend (corrige open redirect GHSA-wrjc-x8rr-h8h6) (#17)
