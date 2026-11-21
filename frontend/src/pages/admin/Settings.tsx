@@ -29,7 +29,7 @@ function Store() {
     try {
       const { storeName, tagline, phone, whatsapp, address, about, instagram, pixKey } = s;
       setS(await api.put<Settings>('/admin/settings', { storeName, tagline, phone, whatsapp, address, about, instagram, pixKey }));
-      reloadConfig();
+      void reloadConfig();
       toast('Configurações salvas');
     } catch (e2) {
       setErr((e2 as Error).message);
@@ -43,7 +43,7 @@ function Store() {
       const data = await resizeImage(file, 512, 'image/png');
       const r = await api.post<{ logoVersion: number }>('/admin/logo', { data });
       setS((cur) => (cur ? { ...cur, logoVersion: r.logoVersion } : cur));
-      reloadConfig();
+      void reloadConfig();
     } catch (e) {
       toast((e as Error).message, true);
     }
@@ -52,7 +52,7 @@ function Store() {
   async function removeLogo() {
     await api.del('/admin/logo').catch(() => {});
     setS((cur) => (cur ? { ...cur, logoVersion: 0 } : cur));
-    reloadConfig();
+    void reloadConfig();
   }
 
   return (
@@ -82,7 +82,7 @@ function Store() {
           onChange={(e) => {
             const f = e.target.files?.[0];
             e.target.value = '';
-            if (f) uploadLogo(f);
+            if (f) void uploadLogo(f);
           }}
         />
       </div>
@@ -113,7 +113,7 @@ function Store() {
         <textarea className="input min-h-[120px]" value={s.about} onChange={set('about')} maxLength={1500} />
       </Field>
       <FormError message={err} onClose={() => setErr('')} />
-      <button className="btn-primary" disabled={busy}>
+      <button type="submit" className="btn-primary" disabled={busy}>
         {busy ? 'Salvando…' : 'Salvar'}
       </button>
     </form>
@@ -154,7 +154,7 @@ function Account() {
         </Field>
       )}
       <FormError message={err} onClose={() => setErr('')} />
-      <button className="btn-secondary">Salvar conta</button>
+      <button type="submit" className="btn-secondary">Salvar conta</button>
       <button type="button" className="btn-danger md:hidden" onClick={signOut}>
         <LogOut size={18} /> Sair
       </button>

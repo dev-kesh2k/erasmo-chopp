@@ -114,7 +114,7 @@ export default function Checkout() {
   return (
     <FullPage
       footer={
-        <button form="checkout" className="btn-primary w-full" disabled={busy || !config.acceptingOrders}>
+        <button type="submit" form="checkout" className="btn-primary w-full" disabled={busy || !config.acceptingOrders}>
           {busy ? 'Enviando…' : `Fazer pedido · ${brl(total)}`}
         </button>
       }
