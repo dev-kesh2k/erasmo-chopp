@@ -37,7 +37,7 @@ function Schedule() {
         minOrderCents: parseMoney(min || '0') ?? 0,
       });
       setS(r);
-      reloadConfig();
+      void reloadConfig();
       toast('Entrega atualizada');
     } catch (e) {
       setErr((e as Error).message);
@@ -48,7 +48,7 @@ function Schedule() {
 
   const addWindow = () => {
     if (!newWin.from || !newWin.to) return;
-    setS({ ...s, windows: [...s.windows, `${newWin.from}-${newWin.to}`].sort() });
+    setS({ ...s, windows: [...s.windows, `${newWin.from}-${newWin.to}`].sort((a, b) => a.localeCompare(b)) });
     setNewWin({ from: '', to: '' });
   };
 
@@ -119,7 +119,7 @@ export default function Delivery() {
     try {
       await api.put('/admin/settings', { acceptingOrders: v });
       settings.reload();
-      reloadConfig();
+      void reloadConfig();
     } catch (e) {
       toast((e as Error).message, true);
     }

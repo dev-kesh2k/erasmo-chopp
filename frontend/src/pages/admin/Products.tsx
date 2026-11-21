@@ -64,7 +64,7 @@ function Categories({ list, reload }: { list: AdminCategory[]; reload: () => voi
       ))}
       <form onSubmit={add} className="flex gap-2">
         <input className="input" placeholder="Nova categoria" value={name} onChange={(e) => setName(e.target.value)} maxLength={60} required />
-        <button className="btn-pill" aria-label="Adicionar categoria">
+        <button type="submit" className="btn-pill" aria-label="Adicionar categoria">
           <Plus size={20} />
         </button>
       </form>
@@ -249,7 +249,7 @@ export default function Products() {
                   onChange={(e) => {
                     const f = e.target.files?.[0];
                     e.target.value = '';
-                    if (f) uploadPhoto(f);
+                    if (f) void uploadPhoto(f);
                   }}
                 />
               </div>
@@ -295,7 +295,7 @@ export default function Products() {
               <Checkbox on={draft.featured} /> Mostrar em destaque
             </button>
             <FormError message={err} onClose={() => setErr('')} />
-            <button className="btn-primary" disabled={busy}>
+            <button type="submit" className="btn-primary" disabled={busy}>
               {busy ? 'Salvando…' : 'Salvar'}
             </button>
             {draft.id && (
