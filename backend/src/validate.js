@@ -7,7 +7,15 @@ export class HttpError extends Error {
   }
 }
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// Mesmo critério de /^[^\s@]+@[^\s@]+\.[^\s@]+$/, sem regex com retrocesso:
+// sem espaços, um único @, algo antes dele e um ponto no domínio com algo antes e depois.
+function emailValido(s) {
+  if (/\s/.test(s)) return false;
+  const partes = s.split('@');
+  if (partes.length !== 2) return false;
+  const [local, dominio] = partes;
+  return local.length > 0 && dominio.slice(1, -1).includes('.');
+}
 
 export function text(v, field, { max = 200, required = false } = {}) {
   const s = typeof v === 'string' ? v.trim() : '';
@@ -18,7 +26,7 @@ export function text(v, field, { max = 200, required = false } = {}) {
 
 export function email(v) {
   const s = text(v, 'E-mail', { max: 160, required: true }).toLowerCase();
-  if (!EMAIL_RE.test(s)) throw new HttpError(400, 'E-mail inválido');
+  if (!emailValido(s)) throw new HttpError(400, 'E-mail inválido');
   return s;
 }
 
