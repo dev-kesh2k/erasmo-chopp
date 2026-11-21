@@ -24,7 +24,7 @@ export function checkWindows(v) {
     if (!HHMM.test(from || '') || !HHMM.test(to || '') || toMin(from) >= toMin(to)) throw new HttpError(400, `Horário inválido: ${w}`);
     return `${from}-${to}`;
   });
-  return JSON.stringify([...new Set(out)].sort());
+  return JSON.stringify([...new Set(out)].sort((a, b) => a.localeCompare(b)));
 }
 
 export function parseDays(raw) {

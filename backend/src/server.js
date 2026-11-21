@@ -9,7 +9,13 @@ app.disable('x-powered-by');
 app.use(express.json({ limit: '4mb' }));
 
 // O proxy pode repassar /api/..., o caminho completo /<slug>/api/... ou já sem o prefixo.
-const publicPath = String(process.env.PUBLIC_PATH || '').replace(/\/+$/, '');
+// Tira as barras do fim sem regex (evita retrocesso).
+function semBarraFinal(v) {
+  let fim = v.length;
+  while (fim > 0 && v[fim - 1] === '/') fim--;
+  return v.slice(0, fim);
+}
+const publicPath = semBarraFinal(String(process.env.PUBLIC_PATH || ''));
 // Saúde com o banco: 503 quando o Postgres não responde (o healthcheck do container continua só na porta).
 app.get(['/health', `${publicPath}/health`], async (_req, res) => {
   const started = Date.now();
